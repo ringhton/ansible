@@ -1,0 +1,9 @@
+- name: Working Nginx on my server
+  hosts: server1
+  tasks:
+  - name: Update cache
+    apt: update_cache=yes cache_valid_time=3600
+  - name: install web server
+    apt: pkg=nginx state=present
+  - name: check port
+    shell: "curl localhost:80"
