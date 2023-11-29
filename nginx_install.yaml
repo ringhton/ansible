@@ -3,7 +3,33 @@
   tasks:
   - name: Update cache
     apt: update_cache=yes cache_valid_time=3600
-  - name: install web server
+  - name: install nginx on server
     apt: pkg=nginx state=present
   - name: check port
     shell: "curl localhost:80"
+  - name: copy nginx.conf on server1
+    ansible.builtin.copy:
+      src: nginx.conf
+      dest: /etc/nginx/nginx.conf
+      owner: root
+      group: root
+      mode: '0644'
+  - name: copy templates config-files for nginx
+    ansible.builtin.template:
+      src: templates/{{ item.name }}
+      dest: /etc/nginx/sites-available/site-{{ item.index }}
+      owner: root
+      group: root
+      mode: '0644'
+    loop:
+      - { name: 'site1.j2', index: '0'}
+      - { name: 'site2.j2', index: '1'}
+  - name: create symlinks for config-files
+    shell: ln -s /etc/nginx/sites-available/site-{{ item.index }} /etc/nginx/sites-enabled/
+    loop:
+      - { name: 'site1.j2', index: '0'}
+      - { name: 'site2.j2', index: '1'}
+  - name: Reload configuration nginx
+    ansible.builtin.service:
+      name: nginx
+      state: reloaded

@@ -1,0 +1,18 @@
+server {
+{% block listen %}
+        listen 80;
+{% endblock %}
+{% block body %}
+	server_name {{ansible_facts.eth0.ipv4.address}}.nip.io;
+
+        root /var/www/html;
+	index index.nginx-debian.html;
+{% endblock %}
+{% block location %}
+	location / {
+		add_header Content-Type text/html;
+		set $str "Hello site 1";
+		return 200 $str;
+	}
+{% endblock %}
+}
