@@ -2,11 +2,17 @@
   hosts: server1
   tasks:
   - name: Update cache
-    apt: update_cache=yes cache_valid_time=3600
+    apt:
+      update_cache=yes
+      cache_valid_time=3600
   - name: install nginx on server
-    apt: pkg=nginx state=present
-  - name: check port
-    shell: "curl localhost:80"
+    apt:
+      pkg=nginx
+      state=present
+  - name: check port (start systemd unit)
+    ansible.builtin.service:
+     name: nginx
+     state: started
   - name: copy nginx.conf on server1
     ansible.builtin.copy:
       src: nginx.conf
@@ -25,10 +31,16 @@
       - { name: 'site1.j2', index: '0'}
       - { name: 'site2.j2', index: '1'}
   - name: create symlinks for config-files
-    shell: ln -s /etc/nginx/sites-available/site-{{ item.index }} /etc/nginx/sites-enabled/
+#    shell: ln -s /etc/nginx/sites-available/site-{{ item.index }} /etc/nginx/sites-enabled/
+    ansible.builtin.file:
+      src: /etc/nginx/sites-available/site-{{ item }}
+      dest: /etc/nginx/sites-enabled/site-{{ item }}
+      owner: root
+      group: root
+      state: link
     loop:
-      - { name: 'site1.j2', index: '0'}
-      - { name: 'site2.j2', index: '1'}
+      - 0
+      - 1
   - name: Reload configuration nginx
     ansible.builtin.service:
       name: nginx
